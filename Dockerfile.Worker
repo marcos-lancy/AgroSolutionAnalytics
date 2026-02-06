@@ -1,0 +1,27 @@
+# Estágio de build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+COPY ["src/AgroSolutions.Analytics.Service.Worker/AgroSolutions.Analytics.Service.Worker.csproj", "src/AgroSolutions.Analytics.Service.Worker/"]
+COPY ["src/AgroSolutions.Analytics.Service.Application/AgroSolutions.Analytics.Service.Application.csproj", "src/AgroSolutions.Analytics.Service.Application/"]
+COPY ["src/AgroSolutions.Analytics.Service.Domain/AgroSolutions.Analytics.Service.Domain.csproj", "src/AgroSolutions.Analytics.Service.Domain/"]
+COPY ["src/AgroSolutions.Analytics.Service.Infra/AgroSolutions.Analytics.Service.Infra.csproj", "src/AgroSolutions.Analytics.Service.Infra/"]
+
+# Restaurar dependências
+RUN dotnet restore "src/AgroSolutions.Analytics.Service.Worker/AgroSolutions.Analytics.Service.Worker.csproj"
+
+# Copiar tudo
+COPY . .
+
+# Build
+WORKDIR "/src/src/AgroSolutions.Analytics.Service.Worker"
+RUN dotnet build "AgroSolutions.Analytics.Service.Worker.csproj" -c Release -o /app/build
+
+# Estágio de publicação
+FROM build AS publish
+RUN dotnet publish "AgroSolutions.Analytics.Service.Worker.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Estágio final
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "AgroSolutions.Analytics.Service.Worker.dll"]
