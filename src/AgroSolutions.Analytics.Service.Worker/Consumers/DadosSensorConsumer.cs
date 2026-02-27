@@ -19,8 +19,17 @@ public class DadosSensorConsumer : IConsumer<DadosSensorRecebidosEvent>
 
     public async Task Consume(ConsumeContext<DadosSensorRecebidosEvent> context)
     {
-        _logger.LogInformation("Consumindo evento de dados de sensor para talhão {TalhaoId}", context.Message.TalhaoId);
+        _logger.LogInformation("===============================================");
+        _logger.LogInformation("MENSAGEM RECEBIDA NO WORKER!");
+        _logger.LogInformation("TalhaoId: {TalhaoId}", context.Message.TalhaoId);
+        _logger.LogInformation("Temperatura: {Temperatura}", context.Message.Temperatura);
+        _logger.LogInformation("UmidadeSolo: {UmidadeSolo}", context.Message.UmidadeSolo);
+        _logger.LogInformation("Precipitacao: {Precipitacao}", context.Message.Precipitacao);
+        _logger.LogInformation("Timestamp: {Timestamp}", context.Message.Timestamp);
+        _logger.LogInformation("===============================================");
         
         await _alertaService.ProcessarDadosSensorAsync(context.Message);
+        
+        _logger.LogInformation("Processamento concluido para talhao {TalhaoId}", context.Message.TalhaoId);
     }
 }

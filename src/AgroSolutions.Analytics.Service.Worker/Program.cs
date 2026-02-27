@@ -46,11 +46,18 @@ builder.Services.AddMassTransit(busConfigurator =>
 {
     busConfigurator.AddConsumer<DadosSensorConsumer>();
 
+    // Configurar receive endpoint explicitamente
     busConfigurator.UsingRabbitMq((context, cfg) =>
     {
         var rabbitMqHost = builder.Configuration["MessageBroker:Host"] ?? "localhost";
-        var rabbitMqUsername = builder.Configuration["MessageBroker:Username"] ?? "guest";
-        var rabbitMqPassword = builder.Configuration["MessageBroker:Password"] ?? "guest";
+        var rabbitMqUsername = builder.Configuration["MessageBroker:Username"] ?? "admin";
+        var rabbitMqPassword = builder.Configuration["MessageBroker:Password"] ?? "admin123";
+
+        Log.Information("===============================================");
+        Log.Information("Configurando RabbitMQ no Worker:");
+        Log.Information("Host: {Host}", rabbitMqHost);
+        Log.Information("Username: {Username}", rabbitMqUsername);
+        Log.Information("===============================================");
 
         cfg.Host(rabbitMqHost, 5672, "/", hostConfigurator =>
         {
@@ -58,7 +65,15 @@ builder.Services.AddMassTransit(busConfigurator =>
             hostConfigurator.Password(rabbitMqPassword);
         });
 
-        cfg.ConfigureEndpoints(context);
+        // Configurar receive endpoint para escutar o tipo correto
+        cfg.ReceiveEndpoint("dados-sensor-queue", e =>
+        {
+            Log.Information("===============================================");
+            Log.Information("Configurando receive endpoint: dados-sensor-queue");
+            Log.Information("Consumer: {Consumer}", typeof(DadosSensorConsumer).FullName);
+            Log.Information("===============================================");
+            e.ConfigureConsumer<DadosSensorConsumer>(context);
+        });
     });
 });
 
